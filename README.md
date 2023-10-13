@@ -23,7 +23,7 @@ This project was created just for fun. We spend a lot of time each day in the ro
 
 ## Usage example
 
-```gherkin
+```
 Feature: Looking For a Job
 
   Background: Set variables
@@ -40,6 +40,5 @@ Feature: Looking For a Job
     Then Docs API: Create HTML file with the found positions on "Indeed"
     And Docs API: Open created HTML file in the browser
 ```
-
 
 
