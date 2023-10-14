@@ -12,8 +12,13 @@ def set_variable(context, company):
 
 
 @step('The path to HTML file folder is {path}')
-def set_path_to_ods(context, path):
+def set_path_to_html(context, path):
     context.path_to_html = path
+
+
+@step('The path to PDF file folder is {path}')
+def set_path_to_pdf(context, path):
+    context.path_to_pdf = path
 
 
 @step('The label for emails in Gmail is {gmail_label}')
@@ -21,9 +26,13 @@ def set_path_to_ods(context, gmail_label):
     context.gmail_label = gmail_label
 
 
+@step('The cover template is {cover_template}')
+def set_cover_template(context, cover_template):
+    context.cover_template = cover_template
+
+
 @step('Remove the positions that {condition} "{word}" in the job title from the list of found on "{source}"')
 def update_found(context, condition, word, source):
-
     assert source.lower() in ['indeed'], f"The resource should be 'Indeed', 'LinkedIn', 'ZipRecruiter', 'DICE'"
     assert condition.lower() in ['do not have', 'have'], f"The condition should be 'have' or 'do not have'"
 
@@ -49,11 +58,8 @@ def update_found(context, condition, word, source):
             else:
                 list_updated.append(list_before[i])
 
-
     if source.lower() == 'indeed':
         context.indeed = list_updated
     else:
         # to do
         pass
-
-
