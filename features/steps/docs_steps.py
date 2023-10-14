@@ -2,6 +2,8 @@ from pyexcel_ods3 import get_data
 from behave import given, when, then, step
 from datetime import date
 import webbrowser
+from pyhtml2pdf import converter
+import os
 
 
 @step('Docs API: Verify if "{query}" {condition} exist in ODS file')
@@ -32,7 +34,6 @@ def is_message_in_ods_file(context, query, condition):
 
 @step('Docs API: Remove the positions that have been rejected from the list of found on "{source}"')
 def update_found(context, source):
-
     assert source.lower() in ['indeed'], f"The resource should be 'Indeed', 'LinkedIn', 'ZipRecruiter', 'DICE'"
 
     list_before = []
@@ -67,7 +68,6 @@ def update_found(context, source):
 
 @step('Docs API: Create HTML file with the found positions on "{source}"')
 def create_html(context, source):
-
     assert source.lower() in ['indeed'], f"The resource should be 'Indeed', 'LinkedIn', 'ZipRecruiter', 'DICE'"
 
     data, days, location, radius = [], '1', 'remote', '25'
@@ -81,7 +81,7 @@ def create_html(context, source):
         pass
 
     today = date.today().strftime("%d-%m-%Y")
-    file = context.path_to_html+f"Positions_for_applying_on_{source}_for_{today}.html"
+    file = context.path_to_html + f"Positions_for_applying_on_{source}_for_{today}.html"
 
     f = open(file, 'w')
 
@@ -112,7 +112,7 @@ def create_html(context, source):
         row = f"<tr><th>#</th><th>Company</th><th>Job Title</th><th>Link</th></tr>"
         f.write(row)
         for i in range(len(data)):
-            row = f"<tr><td>{i+1}</td><td>{data[i][0]}</td><td>{data[i][1]}</td><td><a href='{data[i][2]}'>{data[i][2]}</a></td></tr>"
+            row = f"<tr><td>{i + 1}</td><td>{data[i][0]}</td><td>{data[i][1]}</td><td><a href='{data[i][2]}'>{data[i][2]}</a></td></tr>"
             f.write(row)
 
     html_close = """
@@ -130,3 +130,34 @@ def create_html(context, source):
 @step('Docs API: Open created HTML file in the browser')
 def open_html_file(context):
     webbrowser.open(context.last_created_html)
+
+
+@step('Doc API: Generate the cover letter for the position "{position}" in company "{company}" for "{hiring_manager}"')
+def make_cover_letter(context, position, company, hiring_manager):
+    today = date.today().strftime("%m/%d/%Y")
+    file_name = ('cover_letter_' + company.replace(' ', '_') + '_' + position.replace(' ', '_') + '_' +
+                 today.replace('/', '_'))
+    file_html = context.path_to_html + file_name + '.html'
+    file_pdf = context.path_to_pdf + file_name + '.pdf'
+
+    today = date.today().strftime("%d/%m/%Y")
+
+    with open(context.cover_template) as ft:
+        letter = ft.read()
+
+    letter = (letter.replace('{today}', today).replace('{position}', position).
+              replace('{company}', company).replace('{hiring_manager}', hiring_manager))
+
+    f = open(file_html, 'w')
+    f.write(letter)
+    f.close()
+
+    context.last_created_html = file_html
+    converter.convert(f"file:///{file_html}", file_pdf)
+    context.last_created_pdf = file_pdf
+
+
+@step('Docs API: Open created PDF file in the browser')
+def open_html_file(context):
+    os.system(f'start {os.path.realpath(context.path_to_pdf)}')
+    webbrowser.open(context.last_created_pdf)

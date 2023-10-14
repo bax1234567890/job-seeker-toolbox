@@ -3,7 +3,9 @@ Feature: Looking For a Job
   Background: Set variables
     Given The path to ODS file is C:\my_jobs\log.ods
     And The path to HTML file folder is C:\my_jobs\ready_to_apply\
+    And The path to PDF file folder is C:\my_jobs\ready_to_apply\
     And The label for emails in Gmail is label:_applied
+    And The cover template is cover_letter.template
 
   Scenario: Verify if I have never applied for this position before
     When Looking for company "Employer of Dream"
@@ -18,3 +20,7 @@ Feature: Looking For a Job
     And Docs API: Remove the positions that have been rejected from the list of found on "Indeed"
     Then Docs API: Create HTML file with the found positions on "Indeed"
     And Docs API: Open created HTML file in the browser
+
+  Scenario: Doc API - Generate cover letter
+    Given Doc API: Generate the cover letter for the position "Engineer" in company "The Company" for "Hiring Manager"
+    And Docs API: Open created PDF file in the browser
