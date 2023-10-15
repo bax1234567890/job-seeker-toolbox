@@ -129,7 +129,7 @@ def create_html(context, source):
 
 @step('Docs API: Open created HTML file in the browser')
 def open_html_file(context):
-    webbrowser.open(context.last_created_html)
+    webbrowser.open('file://' + context.last_created_html)
 
 
 @step('Doc API: Generate the cover letter for the position "{position}" in company "{company}" for "{hiring_manager}"')
@@ -159,5 +159,4 @@ def make_cover_letter(context, position, company, hiring_manager):
 
 @step('Docs API: Open created PDF file in the browser')
 def open_html_file(context):
-    os.system(f'start {os.path.realpath(context.path_to_pdf)}')
-    webbrowser.open(context.last_created_pdf)
+    webbrowser.open('file://' + context.last_created_pdf)
