@@ -6,6 +6,9 @@ import os
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+#
+import datetime
+
 
 # If modifying these scopes, delete the file gmail_token.json.
 SCOPES = ['https://mail.google.com/']
@@ -56,7 +59,7 @@ def is_message_in_email(context, query, condition):
         # Call the Gmail API
         service = gmail_authenticate_behave()
 
-        email_ids = search_email_ids_by_messages(service, query=context.gmail_label+' '+query)
+        email_ids = search_email_ids_by_messages(service, query=context.gmail_label + ' ' + query)
         if email_ids and condition == 'should':
             print(email_ids)
 
@@ -77,7 +80,6 @@ def is_message_in_email(context, query, condition):
 
 @step('Gmail API: Remove the positions that have already been applied for from the list of found on "{source}"')
 def update_found(context, source):
-
     assert source.lower() in ['indeed'], f"The resource should be 'Indeed', 'LinkedIn', 'ZipRecruiter', 'DICE'"
 
     list_before = []
@@ -92,7 +94,7 @@ def update_found(context, source):
 
     for i in range(len(list_before)):
         company = str(list_before[i][0]).lower()
-        email_ids = search_email_ids_by_messages(service, query=context.gmail_label+' '+company)
+        email_ids = search_email_ids_by_messages(service, query=context.gmail_label + ' ' + company)
         if not email_ids:
             list_updated.append(list_before[i])
 
@@ -101,4 +103,45 @@ def update_found(context, source):
     else:
         # to do
         pass
+
+
+@step('Gmail API: Get a list of application confirmations from "{source}"')
+def get_confirmations(context, source):
+    def get_value_from_headers(data, header_name):
+        _headers = data['payload']['headers']
+        for i in range(len(_headers)):
+            if _headers[i]['name'] == header_name:
+                return _headers[i]['value']
+        return ''
+
+    def get_date(data):
+        epoch_time = str(data['internalDate'])
+        epoch_time = int(epoch_time[0:len(epoch_time) - 3])
+        return datetime.datetime.fromtimestamp(epoch_time)
+
+    confirmations = []
+    label = context.gmail_label
+    if source.lower() == 'indeed':
+        label = label + ' ' + 'indeedapply@indeed.com'
+    elif source.lower() == 'amazon':
+        label = label + ' ' + 'noreply@mail.amazon.jobs'
+    elif source.lower() == 'worksourcewa':
+        label = label + ' ' + 'WorkSourceWashingtonNoReply@esd.wa.gov'
+
+    service = gmail_authenticate_behave()
+    email_ids = search_email_ids_by_messages(service, query=label)
+
+    for i in range(len(email_ids)):
+        email = service.users().messages().get(userId='me', id=email_ids[i]['id'], format='full').execute()
+
+        _date = get_date(email)
+        # {email_date.month}/{email_date.day}/{email_date.year}
+        email_date = f"{_date.month}/{_date.day}/{_date.year}"
+        email_from = get_value_from_headers(email, 'From')
+        email_subject = get_value_from_headers(email, 'Subject')
+        email_snippet = str(email['snippet']).replace('&#39;', '\'').replace('&amp;', '&')
+
+        confirmations.append([email_date, email_from, email_subject, email_snippet])
+
+    context.confirmations = confirmations
 
