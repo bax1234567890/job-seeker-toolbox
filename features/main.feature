@@ -21,6 +21,11 @@ Feature: Looking For a Job
     Then Docs API: Create HTML file with the found positions on "Indeed"
     And Docs API: Open created HTML file in the browser
 
-  Scenario: Doc API - Generate cover letter
+  Scenario: Generate cover letter
     Given Doc API: Generate the cover letter for the position "Engineer" in company "The Company" for "Hiring Manager"
     And Docs API: Open created PDF file in the browser
+
+  Scenario: Generate report of confirmation emails
+    Given Gmail API: Get a list of application confirmations from "any sources"
+    When Docs API: Create HTML file with confirmations
+    Then Docs API: Open created HTML file in the browser
